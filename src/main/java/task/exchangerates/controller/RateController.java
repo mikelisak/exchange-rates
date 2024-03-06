@@ -28,10 +28,10 @@ public class RateController {
         return ResponseEntity.ok(nbpApiService.getAllRatesForToday());
     }
 
-    @GetMapping("/rates/{id}")
-    public ResponseEntity<List<Rate>> getRatesByCurrency(@PathVariable String id) {
-            return ResponseEntity.ok(nbpApiService.getRatesForCurrency(id));
-    }
+//    @GetMapping("/rates/{id}")
+//    public ResponseEntity<List<Rate>> getRatesByCurrency(@PathVariable String id) {
+//            return ResponseEntity.ok(nbpApiService.getRatesForCurrency(id));
+//    }
 
     // Endpoint for refreshing cache for a specific currency
     @GetMapping("/refresh-cache")
