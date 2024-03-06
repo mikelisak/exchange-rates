@@ -7,6 +7,7 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cglib.core.Local;
 import org.springframework.web.client.RestTemplate;
 import task.exchangerates.model.entity.Rate;
+import task.exchangerates.repository.RateRepository;
 
 import java.io.IOException;
 import java.time.LocalDate;
@@ -16,6 +17,8 @@ import java.util.List;
 @RequiredArgsConstructor
 public class NbpApiService {
     private static final String NBP_API_URL = "http://api.nbp.pl/";
+
+    private static RateRepository rateRepository;
 
 
     @Cacheable
@@ -66,11 +69,21 @@ public class NbpApiService {
         return fetchAllRatesForDate(date);
     }
 
-//    @Cacheable
-//    public List<Rate> getRatesForCurrency(String code) {
-//
-//        // Implement logic to fetch rates for a specific currency from NBP API
-//    }
+    @Cacheable
+    public Rate getRatesForCurrency(String code) {
+        String getRatesForCurrency = "http://api.nbp.pl/api/exchangerates/rates/c/" + code + "today/";
+        ObjectMapper objectMapper = new ObjectMapper();
+        Rate rate = new Rate();
+        try {
+            // Convert JSON array to list of Rate objects
+            rate = objectMapper.readValue(getRatesForCurrency, Rate.class);
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return rate;
+        // Implement logic to fetch rates for a specific currency from NBP API
+    }
 
     @CacheEvict(allEntries = true)
     public void refreshCache() {
