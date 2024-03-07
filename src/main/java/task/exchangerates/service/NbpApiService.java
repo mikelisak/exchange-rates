@@ -4,8 +4,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
-import org.springframework.cglib.core.Local;
-import org.springframework.web.client.RestTemplate;
 import task.exchangerates.model.entity.Rate;
 import task.exchangerates.repository.RateRepository;
 
@@ -22,7 +20,7 @@ public class NbpApiService {
 
 
     @Cacheable
-    public List<Rate> getAllRatesForToday() {
+    public List<Rate> getRatesForToday() {
         return fetchAllRatesForToday();
     }
 
@@ -62,6 +60,14 @@ public class NbpApiService {
             e.printStackTrace();
         }
         return rateList;
+    }
+    @Cacheable
+    public List<Rate> getAllRates(LocalDate date) {
+        if(date != null){
+            return getRatesForDate(date);
+
+        }
+        return getRatesForToday();
     }
 
     @Cacheable
