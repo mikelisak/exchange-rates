@@ -7,6 +7,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import task.exchangerates.model.entity.Rate;
 import task.exchangerates.service.NbpApiService;
+import task.exchangerates.service.NbpServiceApiClient;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -19,7 +20,7 @@ import java.util.List;
 @Validated
 public class RateController {
 
-    private final NbpApiService nbpApiService;
+    private final NbpServiceApiClient nbpApiService;
 
     // Endpoint for returning rates for a specific date
     @GetMapping
@@ -35,7 +36,7 @@ public class RateController {
 
     // Endpoint for refreshing cache for a specific currency
     @GetMapping("/refresh-cache/{code}")
-    public void refreshCache(@PathVariable String code) throws MalformedURLException {
+    public void refreshCacheForCurrency(@PathVariable String code) throws MalformedURLException {
         nbpApiService.refreshCacheForCurrency(code);
     }
 }

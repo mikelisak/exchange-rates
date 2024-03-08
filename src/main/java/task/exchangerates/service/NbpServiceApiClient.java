@@ -13,4 +13,6 @@ public interface NbpServiceApiClient {
 
     List<Rate> getRatesByDate(LocalDate date) throws IOException;
 
+    void refreshCacheForCurrency(String code) throws MalformedURLException;
+
 }
