@@ -24,13 +24,13 @@ public class RateController {
     // Endpoint for returning rates for a specific date
     @GetMapping
     public ResponseEntity<List<Rate>> getAllRates(@RequestParam(required = false) LocalDate date) throws IOException {
-        return ResponseEntity.ok(nbpApiService.getAllRates(date));
+        return ResponseEntity.ok(nbpApiService.getRatesByDate(date));
     }
 
     // Endpoint for getting rates for a specific currency
     @GetMapping("/{id}")
     public ResponseEntity<Rate> getRatesByCurrency(@PathVariable String id) throws MalformedURLException {
-        return ResponseEntity.ok(nbpApiService.getRatesForCurrency(id));
+        return ResponseEntity.ok(nbpApiService.getRatesByCurrency(id));
     }
 
     // Endpoint for refreshing cache for a specific currency

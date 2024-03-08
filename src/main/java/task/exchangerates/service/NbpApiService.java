@@ -26,32 +26,23 @@ import java.util.List;
 
 @RequiredArgsConstructor
 @Service
-public class NbpApiService {
+public class NbpApiService implements NbpServiceApiClient {
     private static final String NBP_API_URL = "https://api.nbp.pl/api/exchangerates/";
     private static final ObjectMapper objectMapper = new ObjectMapper();
     private static final Logger logger = LoggerFactory.getLogger(NbpApiService.class);
 
-    public List<Rate> getAllRates(LocalDate date) throws IOException {
+    public List<Rate> getRatesByDate(LocalDate date) throws IOException {
         if(date != null){
-            return getRatesForDate(date);
+            return getListOfRatesByDate(date);
         }
-        return getRatesForToday();
-    }
-
-    public List<Rate> getRatesForToday() throws IOException {
         return getListOfRatesByDate(LocalDate.now());
     }
 
-    public List<Rate> getRatesForDate(LocalDate date) throws IOException {
-        return getListOfRatesByDate(date);
-    }
-
-    public Rate getRatesForCurrency(String code) throws MalformedURLException {
+    public Rate getRatesByCurrency(String code) throws MalformedURLException {
        return getRateByCode(code);
     }
     @Cacheable(cacheNames = "rates", key = "date")
     public List<Rate> getListOfRatesByDate(LocalDate date) throws IOException {
-        System.out.println("cache");
         String stringUrl = NBP_API_URL + "/tables/a/" + date.toString() + "?format=json";
         URL ratesJson = new URL(stringUrl);
         try (InputStream input = ratesJson.openStream()) {
