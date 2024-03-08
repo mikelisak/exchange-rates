@@ -16,7 +16,7 @@ import java.util.List;
 
 @Slf4j
 @RequiredArgsConstructor
-@RequestMapping("/rate")
+@RequestMapping("/rates")
 @Validated
 public class RateController {
 
@@ -30,13 +30,13 @@ public class RateController {
 
     // Endpoint for getting rates for a specific currency
     @GetMapping("/{id}")
-    public ResponseEntity<Rate> getRatesByCurrency(@PathVariable String id) throws MalformedURLException {
+    public ResponseEntity<Rate> getRatesByCurrency(@PathVariable String id) throws IOException {
         return ResponseEntity.ok(nbpApiService.getRatesByCurrency(id));
     }
 
     // Endpoint for refreshing cache for a specific currency
     @GetMapping("/refresh-cache/{code}")
-    public void refreshCacheForCurrency(@PathVariable String code) throws MalformedURLException {
+    public void refreshCacheForCurrency(@PathVariable String code) throws IOException {
         nbpApiService.refreshCacheForCurrency(code);
     }
 }
