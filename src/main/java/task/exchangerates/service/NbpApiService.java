@@ -1,103 +1,124 @@
 package task.exchangerates.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Service;
 import task.exchangerates.model.entity.Rate;
-import task.exchangerates.repository.RateRepository;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.math.BigDecimal;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
 @RequiredArgsConstructor
+@Service
 public class NbpApiService {
-    private static final String NBP_API_URL = "http://api.nbp.pl/";
+    private static final String NBP_API_URL = "https://api.nbp.pl/api/exchangerates/";
+    private static final ObjectMapper objectMapper = new ObjectMapper();
+    private static final Logger logger = LoggerFactory.getLogger(NbpApiService.class);
 
-    private static RateRepository rateRepository;
-
-
-    @Cacheable
-    public List<Rate> getRatesForToday() {
-        return fetchAllRatesForToday();
-    }
-
-    public List<Rate> fetchAllRatesForDate(LocalDate date){
-        String ratesA = "https://api.nbp.pl/api/exchangerates/tables/a/" + date + "/?format=json";
-        String ratesB = "https://api.nbp.pl/api/exchangerates/tables/b/" + date + "/?format=json";
-        String ratesC = "https://api.nbp.pl/api/exchangerates/tables/c/" + date + "/?format=json";
-        String ratesJson = ratesA + ratesB + ratesC;
-
-        List<Rate> rateList = new ArrayList<>();
-
-        ObjectMapper objectMapper = new ObjectMapper();
-        try {
-            // Convert JSON array to list of Rate objects
-            rateList = objectMapper.readValue(ratesJson, objectMapper.getTypeFactory().constructCollectionType(List.class, Rate.class));
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return rateList;
-    }
-
-    public List<Rate> fetchAllRatesForToday(){
-        String ratesForTodayClassA = "http://api.nbp.pl/api/exchangerates/tables/a/today/?format=json";
-        String ratesForTodayClassB = "http://api.nbp.pl/api/exchangerates/tables/b/today/?format=json";
-        String ratesForTodayClassC = "http://api.nbp.pl/api/exchangerates/tables/c/today/?format=json";
-
-        String ratesJson = ratesForTodayClassA + ratesForTodayClassB + ratesForTodayClassC;
-        List<Rate> rateList = new ArrayList<>();
-
-        ObjectMapper objectMapper = new ObjectMapper();
-        try {
-            // Convert JSON array to list of Rate objects
-            rateList = objectMapper.readValue(ratesJson, objectMapper.getTypeFactory().constructCollectionType(List.class, Rate.class));
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return rateList;
-    }
-    @Cacheable
-    public List<Rate> getAllRates(LocalDate date) {
+    public List<Rate> getAllRates(LocalDate date) throws IOException {
         if(date != null){
             return getRatesForDate(date);
-
         }
         return getRatesForToday();
     }
 
-    @Cacheable
-    public List<Rate> getRatesForDate(LocalDate date) {
-        return fetchAllRatesForDate(date);
+    public List<Rate> getRatesForToday() throws IOException {
+        return getListOfRatesByDate(LocalDate.now());
     }
 
-    @Cacheable
-    public Rate getRatesForCurrency(String code) {
-        String getRatesForCurrency = "http://api.nbp.pl/api/exchangerates/rates/c/" + code + "today/";
-        ObjectMapper objectMapper = new ObjectMapper();
-        Rate rate = new Rate();
-        try {
-            // Convert JSON array to list of Rate objects
-            rate = objectMapper.readValue(getRatesForCurrency, Rate.class);
+    public List<Rate> getRatesForDate(LocalDate date) throws IOException {
+        return getListOfRatesByDate(date);
+    }
 
-        } catch (IOException e) {
-            e.printStackTrace();
+    public Rate getRatesForCurrency(String code) throws MalformedURLException {
+       return getRateByCode(code);
+    }
+    @Cacheable(cacheNames = "rates", key = "date")
+    public List<Rate> getListOfRatesByDate(LocalDate date) throws IOException {
+        System.out.println("cache");
+        String stringUrl = NBP_API_URL + "/tables/a/" + date.toString() + "?format=json";
+        URL ratesJson = new URL(stringUrl);
+        try (InputStream input = ratesJson.openStream()) {
+            InputStreamReader isr = new InputStreamReader(input);
+            BufferedReader reader = new BufferedReader(isr);
+            StringBuilder json = new StringBuilder();
+            int c;
+            while ((c = reader.read()) != -1) {
+                json.append((char) c);
+            }
+            JsonArray convertedObject = new Gson().fromJson(String.valueOf(json), JsonArray.class);
+            JsonArray ratesArray = convertedObject.get(0).getAsJsonObject().get("rates").getAsJsonArray();
+            List<Rate> rateList = new ArrayList<>();
+            for (int i = 0; i < ratesArray.size(); i++) {
+                JsonObject object = ratesArray.get(i).getAsJsonObject();
+                rateList.add(Rate.builder()
+                        .currency(String.valueOf(object.get("currency")))
+                        .code(String.valueOf(object.get("code")))
+                        .mid((object.get("mid").getAsBigDecimal()))
+                        .build());
+            }
+            return rateList;
+        }catch (IOException e) {
+            logger.error(String.valueOf(e));
         }
-        return rate;
-        // Implement logic to fetch rates for a specific currency from NBP API
+        return new ArrayList<>();
     }
+    @Cacheable(cacheNames = "rates", key = "code")
+    public Rate getRateByCode(String code) throws MalformedURLException {
+        String getRatesForCurrency = NBP_API_URL + "/a/" + code + "?format=json";
+        URL url = new URL(getRatesForCurrency);
+        try (InputStream input = url.openStream()) {
+            InputStreamReader isr = new InputStreamReader(input);
+            BufferedReader reader = new BufferedReader(isr);
+            StringBuilder json = new StringBuilder();
+            int c;
+            while ((c = reader.read()) != -1) {
+                json.append((char) c);
+            }
+            JsonObject convertedObject = new Gson().fromJson(String.valueOf(json), JsonObject.class);
 
+            JsonArray jArray =  convertedObject.getAsJsonArray("rates");
+            BigDecimal mid = null;
+            LocalDate effectiveDate = null;
+            for (int i = 0; i < jArray.size(); i++) {
+                JsonObject object = jArray.get(i).getAsJsonObject();
+
+                mid = object.get("mid").getAsBigDecimal();
+                effectiveDate = LocalDate.parse(object.get("effectiveDate").getAsString());
+            }
+            return Rate.builder()
+                    .currency(convertedObject.get("currency").toString())
+                    .code(convertedObject.get("code").toString())
+                    .mid(mid)
+                    .date(effectiveDate)
+                    .build();
+        }catch (IOException e) {
+            logger.error(String.valueOf(e));
+        }
+        return Rate.builder().build();
+    }
+    @Scheduled(cron = "0 6 * * * *")
     @CacheEvict(allEntries = true)
-    public void refreshCache() {
-        // Implement logic to refresh cache
-    }
+    public void refreshCache() {}
 
-    @CacheEvict(key = "#code")
-    public void refreshCacheForCurrency(String code) {
-        // Implement logic to refresh cache for a specific currency
+    @CacheEvict(cacheNames = "rates", key = "#code")
+    public void refreshCacheForCurrency(String code) throws MalformedURLException {
+        getRateByCode(code);
     }
 }
