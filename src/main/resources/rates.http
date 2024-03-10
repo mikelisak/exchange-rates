@@ -1,0 +1,2 @@
+GET http://localhost:8080/rate
+Authorization: user 87c4796a-00a0-45b1-82dd-05907279910c
