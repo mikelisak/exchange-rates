@@ -4,7 +4,6 @@ import com.rabbitmq.client.Channel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.HealthIndicator;
 import org.springframework.stereotype.Component;
@@ -14,7 +13,10 @@ import java.io.IOException;
 import java.util.concurrent.TimeoutException;
 
 import static java.lang.String.format;
-
+/**
+ * Health indicator of RabbitMQ connection
+ * @return status and eventCount
+ */
 @Component
 public class RabbitMQEventCountHealthIndicator implements HealthIndicator {
     private static final Logger logger = LoggerFactory.getLogger(NbpApiService.class);

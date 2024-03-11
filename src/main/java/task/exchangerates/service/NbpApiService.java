@@ -8,7 +8,6 @@ import org.springframework.cache.annotation.CacheConfig;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 import task.exchangerates.model.dto.RateDto;
 import task.exchangerates.model.dto.TableDto;
@@ -22,10 +21,13 @@ import java.util.Arrays;
 import java.util.List;
 
 import static java.lang.String.format;
-
+/**
+ *
+ * Service to fetch data from {@link "https://api.nbp.pl/"}
+ *
+ */
 @RequiredArgsConstructor
 @Service
-@Component
 @CacheConfig(cacheNames={"rate"})
 public class NbpApiService {
     private static final Logger LOGGER = LoggerFactory.getLogger(NbpApiService.class);
@@ -40,8 +42,11 @@ public class NbpApiService {
         return getListOfRatesByDate(LocalDate.now());
     }
 
-    public Rate getRateByCurrency(String code) throws IOException {
-        return getRateByCode(code);
+    public Rate getRateByCurrency(String code, LocalDate date) throws IOException {
+        if (date != null) {
+            return getRateByCodeAndDate(code, date);
+        }
+        return getRateByCodeToday(code);
     }
 
     @Cacheable(key = "#date")
@@ -61,9 +66,20 @@ public class NbpApiService {
     }
 
     @Cacheable(key = "#code")
-    public Rate getRateByCode(String code) throws IOException {
+    public Rate getRateByCodeAndDate(String code, LocalDate date) throws IOException {
         try {
-            RateDto rate = nbpServiceApiClient.getRateByCurrency(code);
+            RateDto rate = nbpServiceApiClient.getRateByCodeAndDate(code, date.toString());
+            return jsonToRateConverter.convertRateDtoToRate(rate);
+        } catch (FeignException e) {
+            LOGGER.error(e.getMessage());
+        }
+        return Rate.builder().build();
+    }
+
+    @Cacheable(key = "#code")
+    public Rate getRateByCodeToday(String code) throws IOException {
+        try {
+            RateDto rate = nbpServiceApiClient.getRateByCode(code);
             return jsonToRateConverter.convertRateDtoToRate(rate);
         } catch (FeignException e) {
             LOGGER.error(e.getMessage());
@@ -81,6 +97,6 @@ public class NbpApiService {
     @CacheEvict(key = "#code")
     public void refreshCacheForCurrency(String code) throws IOException {
         rabbitMQProducer.sendMessage(format("Refreshing cache for rate with code: %s", code));
-        getRateByCode(code);
+        getRateByCodeAndDate(code, LocalDate.now());
     }
 }

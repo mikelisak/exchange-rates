@@ -1,21 +1,24 @@
 package task.exchangerates.controller;
 
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import task.exchangerates.health.AppHealthIndicator;
-import task.exchangerates.health.dto.HealthCheck;
 import task.exchangerates.health.RabbitMQEventCountHealthIndicator;
+import task.exchangerates.health.dto.HealthCheck;
 import task.exchangerates.model.entity.Rate;
 import task.exchangerates.service.NbpApiService;
 
 import java.io.IOException;
 import java.time.LocalDate;
 import java.util.List;
-
-@Slf4j
+/**
+ *
+ * Fetches data from "https://api.nbp.pl/ and refreshes cache
+ * @return Rate
+ *
+ */
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/rates")
@@ -33,9 +36,9 @@ public class RateController {
     }
 
     // Endpoint for getting rates for a specific currency
-    @GetMapping("/{id}")
-    public ResponseEntity<Rate> getRatesByCurrency(@PathVariable String id) throws IOException {
-        return ResponseEntity.ok(nbpApiService.getRateByCurrency(id));
+    @GetMapping("/code/{id}")
+    public ResponseEntity<Rate> getRatesByCurrency(@PathVariable String id, @RequestParam(required = false) LocalDate date) throws IOException {
+        return ResponseEntity.ok(nbpApiService.getRateByCurrency(id, date));
     }
 
     // Endpoint for refreshing cache for a specific currency
