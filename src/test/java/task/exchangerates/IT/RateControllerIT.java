@@ -1,10 +1,11 @@
-package task.exchangerates;
+package task.exchangerates.IT;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.web.servlet.MockMvc;
+import task.exchangerates.ExchangeRatesApplication;
 
 import java.time.LocalDate;
 
