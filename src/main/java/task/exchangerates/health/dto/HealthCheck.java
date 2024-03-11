@@ -1,8 +1,6 @@
 package task.exchangerates.health.dto;
 
-import lombok.Builder;
-import lombok.Data;
-import lombok.ToString;
+import lombok.*;
 import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.Status;
 
@@ -11,6 +9,6 @@ import org.springframework.boot.actuate.health.Status;
 @Data
 public class HealthCheck {
 
-    private final Status appHealth;
-    private final Health rabbitMQHealth;
+    private Status appHealth;
+    private Health rabbitMQHealth;
 }

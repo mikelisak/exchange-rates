@@ -7,7 +7,6 @@ import org.springframework.stereotype.Component;
 /**
  * A custom health check indicator that checks the amount of free memory in the JVM.
  */
-
 @Component
 public class AppHealthIndicator implements HealthIndicator {
     @Override

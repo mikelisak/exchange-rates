@@ -9,7 +9,11 @@ import task.exchangerates.model.entity.Rate;
 
 import java.util.ArrayList;
 import java.util.List;
-
+/**
+ *
+ * Class which converts DTO's to Rate Entity
+ *
+ */
 @Component
 public class JsonToRateConverter {
 

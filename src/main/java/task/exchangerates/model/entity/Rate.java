@@ -4,7 +4,11 @@ import lombok.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-
+/**
+ *
+ * Main object class which we return from RateController
+ *
+ */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
